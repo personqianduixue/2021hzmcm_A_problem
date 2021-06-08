@@ -1,0 +1,410 @@
+文件名：scatter\_color\_img\_rgb.m，功能：绘制图像1,2的rgb散点图，
+
+scatter\_color\_cizhuan\_rgb.m同理
+\begin{lstlisting}[language=matlab]
+figure('Position',[193.8,305,908.8,366.4])
+subplot(121)
+data = load('img1.txt');
+color = data(:,2:4);
+scatter3(color(:,1),color(:,2),color(:,3),50,color./255,'filled');hold on 
+grid on
+ax = gca;
+XYZ = 1:255;
+num255 = ones(1,255)*255;
+plot3(num255,num255,XYZ,'k',num255,XYZ,num255,'k',XYZ,num255,num255,'k');
+ax.XAxisLocation = 'origin';
+ax.YAxisLocation = 'origin';
+xlim([0,256]),ylim([0,256]),zlim([0,256])
+view(124,38)
+xlabel('R');ylabel('G');zlabel('B');
+title('图像1 RGB颜色散点图')
+subplot(122)
+data = load('img2.txt');
+color = data(:,2:4);
+scatter3(color(:,1),color(:,2),color(:,3),50,color./255,'filled');hold on 
+grid on
+ax = gca;
+XYZ = 1:255;
+num255 = ones(1,255)*255;
+plot3(num255,num255,XYZ,'k',num255,XYZ,num255,'k',XYZ,num255,num255,'k');
+ax.XAxisLocation = 'origin';
+ax.YAxisLocation = 'origin';
+xlim([0,256]),ylim([0,256]),zlim([0,256])
+view(124,38)
+xlabel('R');ylabel('G');zlabel('B');
+title('图像2 RGB颜色散点图')
+print(gcf,'..\img\图像1 2的rgb颜色','-dpng','-r600')
+\end{lstlisting}	
+文件名：scatter\_color\_img\_Lab.m，功能：绘制图像1,2的Lab散点图，
+
+scatter\_color\_cizhuan\_Lab.m同理
+\begin{lstlisting}[language=matlab]
+figure('Position',[193.8,305,908.8,366.4])
+subplot(121)
+data = load('img1.txt');
+color = data(:,2:4);
+colorlength = size(color,1);
+lab = [];
+for i = 1:colorlength
+	lab = [lab;rgb2lab(color(i,:)/255)];
+end
+scatter3(lab(:,2),lab(:,3),lab(:,1),50,color./255,'filled');hold on 
+xlabel('a');ylabel('b');zlabel('L');
+xlim([-128,128]),ylim([-128,128]),zlim([0,100])
+title('图像1 lab颜色')
+subplot(122)
+data = load('img2.txt');
+color = data(:,2:4);
+colorlength = size(color,1);
+lab = [];
+for i = 1:colorlength
+	lab = [lab;rgb2lab(color(i,:)/255)];
+end
+scatter3(lab(:,2),lab(:,3),lab(:,1),50,color./255,'filled');hold on 
+xlabel('a');ylabel('b');zlabel('L');
+xlim([-128,128]),ylim([-128,128]),zlim([0,100])
+title('图像2 lab颜色')
+print(gcf,'..\img\图像1 2的lab颜色','-dpng','-r600')
+\end{lstlisting}
+
+
+
+
+文件名：color\_similarity\_DE2000\_rgb.m，功能：使用DE2000算法计算相似点，并在RGB颜色空间绘制相似网络，
+
+color\_similarity\_DE2000\_lab.m,color\_similarity\_DE76\_rgb.m,color\_similarity\_DE76\_lab.m同理
+\begin{lstlisting}[language=matlab]
+clc;clear
+cizhuan_rgb = load('瓷砖.txt');
+img1_rgb = load('img1.txt');
+img2_rgb = load('img2.txt');
+cizhuan_rgb = cizhuan_rgb(:,2:4);
+img1_rgb = img1_rgb(:,2:4);
+img2_rgb = img2_rgb(:,2:4);
+cizhuan_length = size(cizhuan_rgb,1);
+img1_length = size(img1_rgb,1);
+img2_length = size(img2_rgb,1);
+DE_img1 = ones(img1_length,cizhuan_length);
+fun = @deltaE; %DE76
+% fun = @(rgb1,rgb2) imcolordiff(rgb1,rgb2,"Standard","CIEDE2000");%DE2000
+for i = 1:img1_length
+	each_img_rgb = img1_rgb(i,:);
+	for j = 1:cizhuan_length
+		each_cizhuan_rgb = cizhuan_rgb(j,:);
+		DE_img1(i,j) = fun(uint8(each_img_rgb),uint8(each_cizhuan_rgb));%计算相似度
+	end
+end
+DE_img1
+for i = 1:img1_length
+	position_img1(i) = find(DE_img1(i,:)==min(DE_img1(i,:)));%图像中每种rgb对应瓷砖的rgb的编号
+end
+result1 = [1:img1_length;position_img1]';
+dlmwrite('.\DE76\result1.txt',result1,'delimiter',',','newline','pc')
+
+for i = 1:img2_length
+	each_img_rgb = img2_rgb(i,:);
+	for j = 1:cizhuan_length
+		each_cizhuan_rgb = cizhuan_rgb(j,:);
+		DE_img2(i,j) = fun(uint8(each_img_rgb),uint8(each_cizhuan_rgb));%计算相似度
+	end
+end
+DE_img2
+for i = 1:img2_length
+	position_img2(i) = find(DE_img2(i,:)==min(DE_img2(i,:)));%图像中每种rgb对应瓷砖的rgb的编号
+end
+result2 = [1:img2_length;position_img2]';
+dlmwrite('.\DE76\result2.txt',result2,'delimiter',',','newline','pc')
+
+figure(1)
+scatter3(cizhuan_rgb(:,1),cizhuan_rgb(:,2),cizhuan_rgb(:,3),100,cizhuan_rgb./255,'filled');hold on
+scatter3(img1_rgb(:,1),img1_rgb(:,2),img1_rgb(:,3),25,img1_rgb./255,'filled');hold on 
+for i = 1:img1_length
+	img_rgb = img1_rgb(i,:);
+	cizhuanrgb = cizhuan_rgb(position_img1(i),:);
+	plot3([img_rgb(1),cizhuanrgb(1)],[img_rgb(2),cizhuanrgb(2)],[img_rgb(3),cizhuanrgb(3)],'color',...
+	cizhuanrgb/255)
+end
+ax = gca;
+ax.XAxisLocation = 'origin';
+ax.YAxisLocation = 'origin';
+xlim([0,256]),ylim([0,256]),zlim([0,256])
+view(101,32.8)
+xlabel('R');ylabel('G');zlabel('B');
+title('图像1与瓷砖rgb颜色匹配网络(DE76)')
+print(gcf,'..\img\图像1与瓷砖rgb颜色匹配网络DE76','-dpng','-r600')
+
+figure(2)
+scatter3(cizhuan_rgb(:,1),cizhuan_rgb(:,2),cizhuan_rgb(:,3),100,cizhuan_rgb./255,'filled');hold on
+scatter3(img2_rgb(:,1),img2_rgb(:,2),img2_rgb(:,3),25,img2_rgb./255,'filled');hold on 
+for i = 1:img2_length
+	img_rgb = img2_rgb(i,:);
+	cizhuanrgb = cizhuan_rgb(position_img2(i),:);
+	plot3([img_rgb(1),cizhuanrgb(1)],[img_rgb(2),cizhuanrgb(2)],[img_rgb(3),cizhuanrgb(3)],'color',...
+	cizhuanrgb/255)
+end
+ax = gca;
+ax.XAxisLocation = 'origin';
+ax.YAxisLocation = 'origin';
+xlim([0,256]),ylim([0,256]),zlim([0,256])
+view(101,32.8)
+xlabel('R');ylabel('G');zlabel('B');
+title('图像2与瓷砖rgb颜色匹配网络(DE76)')
+print(gcf,'..\img\图像2与瓷砖rgb颜色匹配网络DE76','-dpng','-r600')
+\end{lstlisting}
+
+文件名：add\_color.m，功能：计算问题2的整数规划问题
+
+\begin{lstlisting}[language=matlab]
+clc,clear
+cizhuan_rgb = load('瓷砖.txt');
+cizhuan_rgb = cizhuan_rgb(:,2:4);
+NUM =  size(cizhuan_rgb,1);
+
+n = 0;
+diary(['log_增加',num2str(n),'.log']);diary on;
+R = intvar(1,n);G = intvar(1,n);B = intvar(1,n);
+for i = 1:n
+cizhuan_rgb = [cizhuan_rgb;[R(i),G(i),B(i)]];
+end
+
+for i = 1:NUM+n
+	for j = 1:NUM+n
+		if i>NUM||j>NUM
+			D(i,j) = color_similarity(cizhuan_rgb(i,:),cizhuan_rgb(j,:));
+	end
+end
+end
+for i =1:NUM
+	for j =1:NUM
+		D(i,j) = color_similarity(cizhuan_rgb(i,:),cizhuan_rgb(j,:));
+	end
+end
+D = D+diag(ones(1,n+NUM)*inf);
+
+C = [];
+for i = 1:n
+	C =[C,R(i)>=0,R(i)<=255,G(i)>=0,G(i)<=255,B(i)>=0,B(i)<=255];
+end
+Z = -sum((min(D)));
+
+result  = optimize(C,Z);
+% if result.problem== 0
+%     value(R)
+%     value(G)
+%     value(B)
+%     value(Z)
+% else
+%     disp('求解过程中出错');
+% end
+value(R)
+value(G)
+value(B)
+value(Z)
+%% 绘图
+figure('Position',[187.4,300.2,884.8,392.8])
+data = load('瓷砖.txt');
+color = data(:,2:4);
+colorlength = size(color,1);
+subplot(121)
+scatter3(color(:,1),color(:,2),color(:,3),25,color./255,'filled');hold on
+grid on
+ax = gca;
+XYZ = 1:255;
+num255 = ones(1,255)*255;
+plot3(num255,num255,XYZ,'k',num255,XYZ,num255,'k',XYZ,num255,num255,'k');hold on
+ax.XAxisLocation = 'origin';
+ax.YAxisLocation = 'origin';
+xlim([0,256]),ylim([0,256]),zlim([0,256])
+view(-37.5+160,28)
+xlabel('R');ylabel('G');zlabel('B');title(['RGB(添加',num2str(n),'个点)'])
+scatter3(value(R),value(G),value(B),100,[value(R)',value(G)',value(B)']/255,'filled')
+
+subplot(122)
+lab = rgb2lab(color/255);
+scatter3(lab(:,2),lab(:,3),lab(:,1),25,color./255,'filled');hold on
+grid on
+xlim([-128,128]),ylim([-128,128]),zlim([0,100])
+xlabel('a');ylabel('b');zlabel('L');
+out_rgb = [value(R)',value(G)',value(B)'];
+out_lab = rgb2lab(out_rgb/255);
+title(['Lab(添加',num2str(n),'个点)'])
+scatter3(out_lab(:,2),out_lab(:,3),out_lab(:,1),100,out_rgb./255,'filled');
+print(gcf,['..\img\添加',num2str(n),'个点'],'-dpng','-r600')
+%% 保存数据
+
+value_RGB = num2cell([(1:n)',value(R)',value(G)',value(B)']);
+title = {'序号','R','G','B'};
+result_RGB = [title;value_RGB];
+writecell(result_RGB,['.\增加',num2str(n),'个点.xlsx']);
+dlmwrite('目标值.xlsx',-value(Z),'-append');
+diary off;
+
+\end{lstlisting}
+
+
+文件名：multiobj.m,multiobj\_solve.m，功能：使用遗传算法求解多目标规划问题
+
+\begin{lstlisting}[language=matlab]
+function f =multiobj(x)
+f(2) = x;
+f(1) = -(1.456*x-0.1841)./(x+7.622);
+\end{lstlisting}
+
+\begin{lstlisting}[language=matlab]
+clear
+clc
+fitnessfcn = @multiobj;   % Function handle to the fitness function
+nvars = 1;                      % Number of decision variables
+lb = [0];                   % Lower bound
+ub = [50];                     % Upper bound
+A = []; b = [];                 % No linear inequality constraints
+Aeq = []; beq = [];             % No linear equality constraints
+options = gaoptimset('ParetoFraction',0.3,'PopulationSize',100,'Generations',200,'StallGenLimit',200,'TolFun',1e-100,'PlotFcns',@gaplotpareto);
+
+[x,fval] = gamultiobj(fitnessfcn,nvars, A,b,Aeq,beq,lb,ub,options);
+\end{lstlisting}
+
+
+文件名：shang.m，功能：使用熵权法求解权重，进而求解最优解
+
+\begin{lstlisting}[language=matlab]
+clc;clear
+beishu = 1;
+maxc = 100;
+figure('Position',[129.8,294.6,967.2,380])
+plotlegend = []; 
+i = 0;
+for maxcolornum = 20:10:maxc
+i = i+1;
+colornum = 1:maxcolornum;
+biaoxianli = (1.456*colornum-0.1841)./(colornum+7.622);
+chenben = beishu*colornum;
+chenben = mapminmax(chenben,0,1);
+biaoxianli = mapminmax(biaoxianli,0,1);
+%加载数据  列数表示指标数 ， 行数表示评价的个体数 
+%此数据 7个评价个体 3个评价指标
+X = [chenben',biaoxianli'] ;
+%说明指标是正向指标还是负向指标
+%此数据第一个是负向指标， 其余为正向指标
+Ind=[2 1]; %Specify the positive or negative direction of each indicator
+%S 为分数排名 W为指标权重
+[S,W]=sqf(X,Ind); % get the score
+
+func = @(x) (1.456*x-0.1841)./(x+7.622);
+result = -W(1)*mapminmax(colornum)+W(2)*mapminmax(func(colornum));
+plotnow = plot(colornum,result,'LineWidth',1.5);
+plotlegend = [plotlegend,plotnow];
+legendstr{i} = ['maxnum=',num2str(maxcolornum)];
+hold on;
+[maxvalue,position] = max(result);
+scatter(position,maxvalue,'*')
+line([position,position],[-0.8,maxvalue],'LineStyle','--','LineWidth',0.5)
+
+end
+% xtick([0,5,6,7,10:10:maxc])
+% xticklabel([0,5,6,7,10:10:maxc])
+set(gca,'XTick',[0,4,5,6,10:10:maxc]);
+set(gca,'XTickLabel',[0,4,5,6,10:10:maxc]);
+lgd = legend(plotlegend,legendstr,'NumColumns',2);
+title(lgd,'不同的最大新增颜色数')
+% legend('boxoff')
+title('得分随新增颜色数量的变化');xlabel('新增颜色数量');ylabel('相对得分')
+print(gcf,'..\img\得分随新增颜色数量的变化','-dpng','-r600')
+
+function [s,w]=sqf(x,ind)
+%实现用熵值法求各指标(列）的权重及各数据行的得分
+%x为原始数据矩阵, 一行代表一个样本, 每列对应一个指标
+%ind指示向量，指示各列正向指标还是负向指标，1表示正向指标，2表示负向指标
+%s返回各行（样本）得分，w返回各列权重
+[n,m]=size(x); % n个样本, m个指标
+%%数据的归一化处理
+for i=1:m
+if ind(i)==1 %正向指标归一化
+X(:,i)=guiyi(x(:,i),1,0.002,0.996);    %若归一化到[0,1], 0会出问题
+else %负向指标归一化
+X(:,i)=guiyi(x(:,i),2,0.002,0.996);
+end
+end
+
+Y = X;
+%%计算第j个指标下，第i个样本占该指标的比重p(i,j)
+for i=1:n
+for j=1:m
+p(i,j)=X(i,j)/sum(X(:,j));
+end
+end
+
+%%计算第j个指标的熵值e(j)
+k=1/log(n);
+for j=1:m
+e(j)=-k*sum(p(:,j).*log(p(:,j)));
+end
+d=ones(1,m)-e; %计算信息熵冗余度
+w=d./sum(d); %求权值w
+s=100*w*p'; %求综合得分
+end
+
+function y=guiyi(x,type,ymin,ymax)
+%实现正向或负向指标归一化，返回归一化后的数据矩阵
+%x为原始数据矩阵, 一行代表一个样本, 每列对应一个指标
+%type设定正向指标1,负向指标2
+%ymin,ymax为归一化的区间端点
+[n,m]=size(x);
+y=zeros(n,m);
+xmin=min(x);
+xmax=max(x);
+switch type
+case 1
+for j=1:m
+y(:,j)=(ymax-ymin)*(x(:,j)-xmin(j))/(xmax(j)-xmin(j))+ymin;
+end
+case 2
+for j=1:m
+y(:,j)=(ymax-ymin)*(xmax(j)-x(:,j))/(xmax(j)-xmin(j))+ymin;
+end
+end
+end
+function X0 = stand(X)
+
+zeros(size(X));
+[nr,nx]=size(X);
+for mk=1:nr
+X0(mk,:)=(X(mk,:)-mean(X))./std(X);
+end
+end
+\end{lstlisting}
+文件名：table\_colorize.m,功能：根据表格的RGB值设置单元格颜色
+
+\begin{lstlisting}[language=matlab]
+try
+Excel = actxGetRunningServer('Excel.Application');
+catch
+Excel = actxserver('Excel.Application'); % 创建一个本地Excel服务器
+end
+
+% Excel.Visible = 1;  % 让打开的Excel可见(默认不可见)
+
+for i = 20:20
+ReadExcel = Excel.Workbooks.Open([pwd,['\增加',num2str(i),'个点.xlsx']]);
+Sheets = Excel.ActiveWorkBook.Sheets;
+Sheets_1 = Sheets.Item(1);
+
+RGB = Sheets_1.Range(['B2:D',num2str(i+1)]).value
+%     cell2mat(RGB(1,:))
+for j = 2:i+1
+	SetColor(Sheets_1,['E',num2str(j)],cell2mat(RGB(j-1,:)))
+	end
+	ReadExcel.SaveAs([pwd, ['\增加',num2str(i),'个点(带颜色).xlsx']]);
+end
+
+Excel.Quit;     % 关闭excel
+
+function SetColor(sheet, strRange, dColor)
+%
+C_r = round(dColor(1));
+C_g = round(dColor(2));
+C_b = round(dColor(3));
+color = hex2dec([dec2hex(C_b,2) dec2hex(C_g,2) dec2hex(C_r,2)]);
+sheet.Range(strRange).Interior.Color = color;
+end
+\end{lstlisting}
